@@ -1,5 +1,5 @@
 import torch
-from torch_ms.model_ggnn_torch import DenseGGNNModel
+from basic_ggnn_model.torch_version.model import DenseGGNNModel
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 

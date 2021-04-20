@@ -4,7 +4,7 @@ import tensorflow as tf
 
 import json
 
-from tf_ms.utils import glorot_init, MLP, ThreadedIterator, SMALL_NUMBER
+from basic_ggnn_model.tf_version.utils import glorot_init, MLP, ThreadedIterator, SMALL_NUMBER
 
 import os
 import pickle

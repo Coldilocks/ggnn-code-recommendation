@@ -1,5 +1,5 @@
 from docopt import docopt
-from tf_ms.model_ggnn_tf import DenseGGNNModel
+from basic_ggnn_model.tf_version.model import DenseGGNNModel
 import sys, traceback
 import pdb
 

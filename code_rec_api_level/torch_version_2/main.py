@@ -1,8 +1,8 @@
 import numpy as np
 import torch
-from torch_ms.model_var_torch import DenseGGNNModel
-from torch_ms.utils import ThreadedIterator
-from torch_ms.dataset import JavaCodeDataset
+from code_rec_api_level.torch_version_2.model import DenseGGNNModel
+from code_rec_api_level.torch_version_2.utils import ThreadedIterator
+from code_rec_api_level.torch_version_2.dataset import JavaCodeDataset
 import os
 import gc
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     opt['batch_size'] = 256  # 256
     opt['tie_fwd_bkwd'] = False
 
-    dataset_path = '../data/small_input.json'
+    dataset_path = '../../data/small_input.json'
 
     model = DenseGGNNModel(param)
     print(list(model.parameters()))

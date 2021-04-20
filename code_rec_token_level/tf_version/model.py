@@ -153,7 +153,7 @@ class DenseGGNNProgModel():
         # 设置运行记录文件（保存参数）
         # 命名格式如例子：2018-05-02-21-11-08_21156_log.json
         self.run_id = "_".join([time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
-        log_dir = '.'
+        log_dir = '../../tf_ms'
         # 模型存储路径
         self.log_file = os.path.join(log_dir, "%s_log.pickle" % self.run_id)
         # 最佳模型存储路径

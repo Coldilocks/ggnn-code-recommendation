@@ -134,5 +134,5 @@ class JavaCodeDataset():
 
 
 if __name__ == '__main__':
-    dataset = JavaCodeDataset('../data/input.json', 4, True)
+    dataset = JavaCodeDataset('../../data/input.json', 4, True)
     print(dataset.__getitem__(1))
