@@ -1,4 +1,4 @@
-##GGNN Token Recommendation Pro
+## GGNN Token Recommendation Pro
 
 ### 1. Brief Introduction
 This repository contains GGNN(Gated Graph Neural Network[<sup>1</sup>](#refer-anchor1)) based code recommendation models implemented in PyTorch and Tensorflow 1.0, which can generate API or token predictions for incomplete code snippets.
