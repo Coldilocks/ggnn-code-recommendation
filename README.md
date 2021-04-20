@@ -6,7 +6,7 @@ This repository contains GGNN(Gated Graph Nerual Network[<sup>1</sup>](#refer-an
 ### 2. Project Structure
 There are three packages inside the project:
 
-1.basic_ggnn_model 
+1. basic_ggnn_model 
 - **tf_version**
       
   The model under this package is a duplicate implementation of GGNN model in Tensorflow in another repository: **gated-graph-neural-network-samples**[<sup>2</sup>](#refer-anchor2).
@@ -17,7 +17,7 @@ There are three packages inside the project:
   A re-implemented PyTorch GGNN model based on the Tensorflow version(**gated-graph-neural-network-samples**[<sup>2</sup>](#refer-anchor2)).
   Currently there is no dataset loading method️ for this implementation, and all the input data is randomly generated.
 
-2.code_rec_api_level
+2. code_rec_api_level
 - torch_version_1
   
   An unofficial implementation of Java API recommendation model for the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**[<sup>3</sup>](#refer-anchor3). This model is inspired by another two repository: **ggnn.pytorch**[<sup>4</sup>](#refer-anchor4) and **GGNN_Reasoning**[<sup>5</sup>](#refer-anchor5).
@@ -26,8 +26,7 @@ There are three packages inside the project:
   
   This is also an unofficial implementation of the above paper. Please note that it is based on the model under the `basic_ggnn_model/torch_version` package.
 
-
-3.code_rec_token_level
+3. code_rec_token_level
 - tf_version: 
 
   Token-level Code recommentation model inspired by the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**.
