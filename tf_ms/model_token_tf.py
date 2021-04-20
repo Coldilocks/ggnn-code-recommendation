@@ -15,19 +15,21 @@ import random
 from collections import namedtuple, defaultdict
 import gc
 
+
 class DefaultConfig(object):
     train_data_root = ''
     test_data_root = ''
-    valid_data_root = 'molecules_valid.json'
+    valid_data_root = '../data/token_valid.json'
     load_model_path = ''
-    restore_model_path = 'C:/Users/Zero/PycharmProjects/Code-Recommendation/code_completion/checkpoints'
+    restore_model_path = '../save/checkpoints'
     whole_vocabulary_size = 100  # 整个词表的大小，包含token和节点的type
     batch_size = 256
     graph_state_dropout = 0.75
     token_vocabulary_size = 100  # 预测词表的大小，也就是token词表的大小
     token_max_len = 20
 
-# 定义MLP层(3层)
+
+# 定义MLP层
 class MLP(object):
     def __init__(self, in_size, out_size, hid_sizes, dropout_keep_prob):
         self.in_size = in_size
@@ -63,6 +65,7 @@ class MLP(object):
         last_hidden = hid
         return last_hidden
 
+
 # 多线程计算
 class ThreadedIterator:
     """An iterator object that computes its elements in a parallel thread to be ready to be consumed.
@@ -86,10 +89,12 @@ class ThreadedIterator:
             next_element = self.__queue.get(block=True)
         self.__thread.join()
 
+
 # glorot初始化
 def glorot_init(shape):
     initialization_range = np.sqrt(6.0 / (shape[-2] + shape[-1]))
     return np.random.uniform(low=-initialization_range, high=initialization_range, size=shape).astype(np.float32)
+
 
 # 将graph转换成[num_edge_types, max_n_vertices, max_n_vertices]邻接矩阵
 def graph_to_adj_mat(graph, max_n_vertices, num_edge_types, tie_fwd_bkwd=False):
@@ -100,7 +105,6 @@ def graph_to_adj_mat(graph, max_n_vertices, num_edge_types, tie_fwd_bkwd=False):
         # 如果graph是通过补0扩展得到的，那么补充的部分应该忽略
         if (e == 0 and src == 0 and dest == 0):
             continue
-        # todo:最大边数计算错误出现数组越界问题
         amat[e - 1, dest - 1, src - 1] = 1
         amat[e - 1 + bwd_edge_offset, src - 1, dest - 1] = 1
     return amat
@@ -240,7 +244,8 @@ class DenseGGNNProgModel():
                             for token in d["token"]]
             # [actual_node_num, max_token_num] -> [max_node_num, max_token_num]
             # [[1,2,3],[4,5,0],[7,0,0]] -> [[1,2,3],[4,5,0],[7,0,0], [0,0,0]]
-            padded_token_orders = token_orders + [[0 for _ in range(DefaultConfig.token_max_len)] for _ in range(chosen_bucket_size - n_active_nodes)]
+            padded_token_orders = token_orders + [[0 for _ in range(DefaultConfig.token_max_len)] for _ in
+                                                  range(chosen_bucket_size - n_active_nodes)]
 
             # 2.padding type orders
             # [actual_node_num, 1] -> [actual_node_num]
@@ -250,15 +255,10 @@ class DenseGGNNProgModel():
 
             # 3.padding token length
             # [actual_node_num]
-            token_length = [len(token) if len(token) < DefaultConfig.token_max_len else DefaultConfig.token_max_len for token in d["token"]]
+            token_length = [len(token) if len(token) < DefaultConfig.token_max_len else DefaultConfig.token_max_len for
+                            token in d["token"]]
             # [actual_node_num] -> [max_node_num]
             padded_token_length = token_length + [0 for _ in range(chosen_bucket_size - n_active_nodes)]
-
-            # 'token_mask': [[[1.0 for _ in range(self.params['hidden_size'])] for _ in range(len(token))] +
-            #                 [[0. for _ in range(self.params['hidden_size'])] for _ in range(DefaultConfig.token_max_len - len(token))]
-            #                if len(token) <= DefaultConfig.token_max_len else
-            #                [[1.0 for _ in range(self.params['hidden_size'])] for _ in range(len(token))]
-            #                for token in d["token"]],
 
             # 如果这里引入了embedding，需要将加入的init的vector对应到字典的unknown
             bucketed[chosen_bucket_idx].append({
@@ -284,7 +284,7 @@ class DenseGGNNProgModel():
                 # 打乱每个bucket（包含了相同节点）的数据
                 np.random.shuffle(bucket)
                 for task_id in self.params['task_ids']:
-                    # 抽样？（似乎是将一部分数据的labels变成None）
+                    # 抽样（将一部分数据的labels变成None）
                     task_sample_ratio = self.params['task_sample_ratios'].get(str(task_id))
                     if task_sample_ratio is not None:
                         ex_to_sample = int(len(bucket) * task_sample_ratio)
@@ -341,9 +341,11 @@ class DenseGGNNProgModel():
                 with tf.variable_scope("softmax"):
                     # 22821是预测词表的大小，softmax的最终输出维度
                     # softmax_weights: [softmax_size, token_vocab_size]
-                    self.weights['softmax_weights'] = tf.Variable(glorot_init([self.params['softmax_size'], DefaultConfig.token_vocabulary_size]))
+                    self.weights['softmax_weights'] = tf.Variable(
+                        glorot_init([self.params['softmax_size'], DefaultConfig.token_vocabulary_size]))
                     # softmax_biases: [token_vocab_size]
-                    self.weights['softmax_biases'] = tf.Variable(np.zeros([DefaultConfig.token_vocabulary_size]).astype(np.float32))
+                    self.weights['softmax_biases'] = tf.Variable(
+                        np.zeros([DefaultConfig.token_vocabulary_size]).astype(np.float32))
                     print('softmax weights: ', self.weights['softmax_weights'])
                 # 1.3 计算最后的g函数（输出函数）
                 # computed_values: [b, token_vocab_size], 这里返回的是一个[b,softmax维度]的结果
@@ -407,17 +409,7 @@ class DenseGGNNProgModel():
             cell = tf.nn.rnn_cell.DropoutWrapper(cell, state_keep_prob=self.placeholders['graph_state_keep_prob'])
             self.weights['node_gru'] = cell
 
-            # 分别定义两个placeholder，一个type，一个token。在这里需要定义三次的相加操作，重新设计查表方法 batch_size, node_size, node_emb
-
-            # input_orders: [b, v] self.placeholders['input_orders'] = tf.placeholder(tf.int32, [None, None, ],
-            # name='input_orders') index2vector: [vocab_size, e_dim], 21505对应着whole词表的大小 self.weights['index2vector'] =
-            # tf.Variable(dtype=tf.float32, initial_value=np.random.uniform(-0.5, 0.5,
-            # [DefaultConfig.whole_vocabulary_size, e_dim]))
-
             # 1. type embedding
-            # self.placeholders['type_input_orders'] = tf.placeholder(tf.int32,
-            #                                                         [None, self.placeholders['num_vertices'], 1],
-            #                                                         name='input_orders')
             self.placeholders['type_input_orders'] = tf.placeholder(tf.int32,
                                                                     [None, None],
                                                                     name='type_input_orders')
@@ -429,9 +421,6 @@ class DenseGGNNProgModel():
                                                                             self.placeholders['type_input_orders'])
 
             # 2. token embedding
-            # self.placeholders['token_input_orders'] = tf.placeholder(tf.int32, [None, self.placeholders['num_vertices'],
-            #                                                                     DefaultConfig.token_max_len],
-            #                                                          name='input_orders')
             # [b, v, max_token_num]
             self.placeholders['token_input_orders'] = tf.placeholder(tf.int32, [None, None, None],
                                                                      name='token_input_orders')
@@ -444,19 +433,8 @@ class DenseGGNNProgModel():
 
             self.placeholders['token_length'] = tf.placeholder(shape=(None,), dtype=tf.int32, name='token_length')
 
-
-
-            # self.variable_embeddings = self.placeholders['variable_orders_embed']
-            # print('self.variable_embedding ', self.variable_embeddings.get_shape().as_list())
-
-            # [b, v, h], useless
-            # self.placeholders['initial_node_representation'] = tf.placeholder(tf.float32,
-            #                                                                   [None, None, self.params['hidden_size']],
-            #                                                                   name='node_features')
-
     # 1.2 这里定义了每次信息传递过程中需要的计算, 包括了边的传播和GRU单元的计算
     def compute_final_node_representations(self) -> tf.Tensor:
-
 
         v = self.placeholders['num_vertices']
         h_dim = self.params['hidden_size']
@@ -758,7 +736,6 @@ class DenseGGNNProgModel():
                 else:
                     batch_data[self.placeholders['out_layer_dropout_keep_prob']] = 1.0
                     fetch_list = [self.ops['loss'], accuracy_ops]
-                # todo: 数据大小不匹配 报错ValueError: setting an array element with a sequence
                 result = self.sess.run(fetch_list, feed_dict=batch_data)
                 (batch_loss, batch_accuracies) = (result[0], result[1])
                 loss += batch_loss * num_graphs
@@ -824,20 +801,13 @@ class DenseGGNNProgModel():
             batch_data = self.make_batch(elements)
             num_graphs = len(batch_data['labels'])
 
-            # 补零，将节点的维度拉伸到hidden_size
-            # batch_data['orders'] = np.squeeze(batch_data['orders'], axis=1)
-            # if len(batch_data['orders'].shape) == 1:
-            #     batch_data['orders'] = np.expand_dims(batch_data['orders'], axis=0)
-
             if len(batch_data['labels']) == 0:
                 continue
             batch_feed_dict = {
-                # self.placeholders['input_orders']: batch_data['orders'],  # 顺序
                 self.placeholders['token_input_orders']: batch_data['token_orders'],
                 self.placeholders['type_input_orders']: batch_data['type_orders'],
                 self.placeholders['token_length']: batch_data['token_length'],
-                #self.placeholders['token_mask']: batch_data['token_mask'],
-                self.placeholders['target_values']: np.transpose(batch_data['labels'], axes=[1, 0]),  #
+                self.placeholders['target_values']: np.transpose(batch_data['labels'], axes=[1, 0]),
                 self.placeholders['target_mask']: np.transpose(batch_data['task_masks'], axes=[1, 0]),
                 self.placeholders['num_graphs']: num_graphs,  # 多少个数据
                 self.placeholders['num_vertices']: bucket_sizes[bucket],  # 点数量（补0后）
@@ -866,9 +836,8 @@ class DenseGGNNProgModel():
 
     # evaluation-1
     def make_batch(self, elements):
-        # batch_data = {'adj_mat': [], 'orders': [], 'labels': [], 'node_mask': [], 'task_masks': [],
-        #               'variable_masks': []}
-        batch_data = {'adj_mat': [], 'token_orders': [], 'type_orders': [], 'labels': [], 'node_mask': [], 'task_masks': [],'token_length':[],'variable_masks': []}
+        batch_data = {'adj_mat': [], 'token_orders': [], 'type_orders': [], 'labels': [], 'node_mask': [],
+                      'task_masks': [], 'token_length': [], 'variable_masks': []}
 
         # 逐数据将信息填入
         for d in elements:

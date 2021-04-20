@@ -24,25 +24,6 @@ class DenseGGNNModel(nn.Module):
         self.out_layer_dropout_keep_prob = param['out_layer_dropout_keep_prob']
         self.num_time_steps = param['num_time_steps']
 
-        # todo: how to set them
-        # self.num_graphs = param['num_graphs']
-        # v
-        # self.num_vertices = param['num_vertices']
-
-        # todo: replace by a Linear and init the weight and bias
-        # self.edge_linear = torch.nn.Linear(intput_size, output_size)
-        # torch.nn.init.xavier_uniform_(self.edge_linear.weight)
-        # torch.nn.init.zeros_(self.edge_linear.bias)
-
-        # # edge_weights: [e, h, h]
-        # self.edge_weights = nn.Parameter(torch.tensor([self.num_edge_types, self.hidden_size, self.hidden_size],
-        #                                               requires_grad=True))
-        # # glorot initialization
-        # nn.init.xavier_uniform_(self.edge_weights)
-        # # edge_biases: [e, 1, h]
-        # self.edge_bisase = nn.Parameter(torch.tensor([self.num_edge_types, 1, self.hidden_size], dtype=torch.float32))
-        # nn.init.zeros_(self.edge_bisase)
-
         for i in range(self.num_edge_types):
             edge_fc = nn.Sequential(
                 nn.Linear(self.hidden_size, self.hidden_size),
@@ -54,9 +35,6 @@ class DenseGGNNModel(nn.Module):
 
         self.edge_fcs = AttrProxy(self, "edge_")
 
-
-        # gru_cell->dropoutwrapper(graph_state_keep_prob): h_dim
-        # input_size: [b, ]
         self.gru_cell = nn.GRUCell(input_size=self.hidden_size, hidden_size=self.hidden_size, bias=True)
 
         self.regression_gate = nn.Sequential(
@@ -103,7 +81,6 @@ class DenseGGNNModel(nn.Module):
         # final node representations
         # last_h = torch.reshape(h, [-1, v, h_dim])   # [b, v, h]
         last_h = h.view([-1, v, h_dim])     # [b, v, h]
-
 
         # 2. gated regression
         gate_input = torch.cat((last_h, initial_node_representation), dim=2)    # [b, v, 2*h]

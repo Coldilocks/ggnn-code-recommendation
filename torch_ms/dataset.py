@@ -178,7 +178,7 @@ class JavaCodeDataset():
                 'variable': [cur_variable_indexes]
             })
 
-        # # todo: 抽样（将一部分数据的labels变成None）
+        # 抽样（将一部分数据的labels变成None）
         # if self.is_training:
         #     for (node_num_id, bucket) in node_num_2_graph_dict.items():
         #         # 打乱每个bucket（包含了相同节点）的数据

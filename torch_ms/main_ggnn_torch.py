@@ -42,7 +42,6 @@ if __name__ == '__main__':
 
             computed_values = model(initial_node_representation, adjacency_matrix, node_mask, num_vertices[i])
 
-            # todo: automatic
             diff = computed_values - target_values
             task_target_mask = target_mask
             task_target_num = torch.sum(task_target_mask) + SMALL_NUMBER

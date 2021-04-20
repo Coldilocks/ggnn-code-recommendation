@@ -4,10 +4,6 @@ import torch
 import numpy as np
 
 
-# opt.n_nodes
-# opt.n_vars
-
-
 class JavaCodeDataset():
     def __init__(self, file_name, n_edges, is_train):
         self.n_edges = n_edges

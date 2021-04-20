@@ -234,25 +234,6 @@ class CodeRecModel(nn.Module):
             nn.Linear(self.hidden_dim + self.var_embedding_dim, self.n_node_types)
         )
 
-        # self.output_layer = nn.Sequential(
-        #     nn.Linear(self.hidden_dim + self.var_embedding_dim, self.softmax_size),
-        #     nn.Tanh(),
-        #     nn.Dropout(self.dropout_rate)
-        # )
-        #
-        # self.softmax_layer = nn.Linear(self.softmax_size, self.n_node_types)
-
-        # self.softmax_layer = nn.Sequential(
-        #     nn.Linear(self.softmax_size, self.n_node_types),
-        #     nn.Sigmoid()
-        #     # nn.Softmax(dim=1)
-        #     # nn.LogSoftmax(dim=1)
-        # )
-
-
-
-
-
     def forward(self, node_annotation, A, var_orders):
         """
         :param node_hidden_state: [b, n, h]
@@ -261,8 +242,6 @@ class CodeRecModel(nn.Module):
         :param var_orders: [b, v]
         :return: [b, vocab_size]
         """
-        # node_annotation = torch.LongTensor(node_annotation)
-        # node_annotation = self.node_embedding(node_annotation)
 
         new_node_annotation = []
         for i in range(node_annotation.shape[0]):
@@ -305,18 +284,5 @@ class CodeRecModel(nn.Module):
         join_vector = torch.cat((graph_vector, var_vector), dim=1)
         # output: [b, vocab_size]
         output = self.output_layer(join_vector)
-
-        # # graph_vector: [b, h]
-        # graph_vector = self.ggnn_model(node_hidden_state, node_annotation, A)
-        # # var_vector: [b, v, v_h]
-        # var_vector = self.variable_model(var_orders)
-        # # var_vector: [b, v_h]
-        # var_vector = torch.sum(var_vector, dim=1)
-        # # join_vector: [b, h + v_h]
-        # join_vector = torch.cat((graph_vector, var_vector), dim=1)
-        # # output: [b, s]
-        # output = self.output_layer(join_vector)
-        # # output: [b, vocab_size]
-        # # output = self.softmax_layer(output)
 
         return output

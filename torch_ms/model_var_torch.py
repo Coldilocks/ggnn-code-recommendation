@@ -124,10 +124,6 @@ class DenseGGNNModel(nn.Module):
         v = num_vertices
         h_dim = self.hidden_size
 
-        # [b, v, h] -> [b*v, h]
-        # h = initial_node_representation
-        # h = h.view([-1, h_dim])
-
         # [b, v] -> [b, v, h]
         order_embed = self.api_embedding(input_orders)
         # [b, v, h] -> [b*v, h]

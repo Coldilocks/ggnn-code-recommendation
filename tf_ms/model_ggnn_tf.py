@@ -1,34 +1,17 @@
-#!/usr/bin/env/python
-"""
-Usage:
-    chem_tensorflow_dense.py [options]
-
-Options:
-    -h --help                Show this screen.
-    --config-file FILE       Hyperparameter configuration file path (in JSON format)
-    --config CONFIG          Hyperparameter configuration dictionary (in JSON format)
-    --log_dir NAME           log dir name
-    --data_dir NAME          data dir name
-    --restore FILE           File to restore weights from.
-    --freeze-graph-model     Freeze weights of graph model components.
-    --evaluate               example evaluation mode using a restored model
-"""
-
-
 from collections import defaultdict
 import numpy as np
 import tensorflow as tf
 
-
 import json
 
-from tf_version.utils import glorot_init, MLP, ThreadedIterator, SMALL_NUMBER
+from tf_ms.utils import glorot_init, MLP, ThreadedIterator, SMALL_NUMBER
 
 import os
 import pickle
 import random
 import time
 from typing import Any, Sequence
+
 
 # 1.1.1
 def graph_to_adj_mat(graph, max_n_vertices, num_edge_types, tie_fwd_bkwd=True):
@@ -234,7 +217,8 @@ class DenseGGNNModel():
         # num_graphs: shape=()
         self.placeholders['num_graphs'] = tf.placeholder(tf.int32, [], name='num_graphs')
         # out_layer_dropout_keep_prob: shape=()
-        self.placeholders['out_layer_dropout_keep_prob'] = tf.placeholder(tf.float32, [], name='out_layer_dropout_keep_prob')
+        self.placeholders['out_layer_dropout_keep_prob'] = tf.placeholder(tf.float32, [],
+                                                                          name='out_layer_dropout_keep_prob')
 
         with tf.variable_scope("graph_model"):
             # 2.1
@@ -252,10 +236,12 @@ class DenseGGNNModel():
             with tf.variable_scope("out_layer_task%i" % task_id):
                 with tf.variable_scope("regression_gate"):
                     self.weights['regression_gate_task%i' % task_id] = MLP(2 * self.params['hidden_size'], 1, [],
-                                                                           self.placeholders['out_layer_dropout_keep_prob'])
+                                                                           self.placeholders[
+                                                                               'out_layer_dropout_keep_prob'])
                 with tf.variable_scope("regression"):
                     self.weights['regression_transform_task%i' % task_id] = MLP(self.params['hidden_size'], 1, [],
-                                                                                self.placeholders['out_layer_dropout_keep_prob'])
+                                                                                self.placeholders[
+                                                                                    'out_layer_dropout_keep_prob'])
                 # 2.3
                 # computed_values: [b]
                 computed_values = self.gated_regression(self.ops['final_node_representations'],
@@ -449,8 +435,9 @@ class DenseGGNNModel():
                 (best_val_acc, best_val_acc_epoch) = (float("+inf"), 0)
             for epoch in range(1, self.params['num_epochs'] + 1):
                 print("== Epoch %i" % epoch)
-                train_loss, train_accs, train_errs, train_speed, train_steps = self.run_epoch("epoch %i (training)" % epoch,
-                                                                                              self.train_data, True, self.train_step_id)
+                train_loss, train_accs, train_errs, train_speed, train_steps = self.run_epoch(
+                    "epoch %i (training)" % epoch,
+                    self.train_data, True, self.train_step_id)
                 self.train_step_id += train_steps
                 accs_str = " ".join(["%i:%.5f" % (id, acc) for (id, acc) in zip(self.params['task_ids'], train_accs)])
                 errs_str = " ".join(["%i:%.5f" % (id, err) for (id, err) in zip(self.params['task_ids'], train_errs)])
@@ -458,8 +445,9 @@ class DenseGGNNModel():
                                                                                                         accs_str,
                                                                                                         errs_str,
                                                                                                         train_speed))
-                valid_loss, valid_accs, valid_errs, valid_speed, valid_steps = self.run_epoch("epoch %i (validation)" % epoch,
-                                                                                              self.valid_data, False, self.valid_step_id)
+                valid_loss, valid_accs, valid_errs, valid_speed, valid_steps = self.run_epoch(
+                    "epoch %i (validation)" % epoch,
+                    self.valid_data, False, self.valid_step_id)
                 self.valid_step_id += valid_steps
                 accs_str = " ".join(["%i:%.5f" % (id, acc) for (id, acc) in zip(self.params['task_ids'], valid_accs)])
                 errs_str = " ".join(["%i:%.5f" % (id, err) for (id, err) in zip(self.params['task_ids'], valid_errs)])
@@ -488,7 +476,8 @@ class DenseGGNNModel():
                     best_val_acc = val_acc
                     best_val_acc_epoch = epoch
                 elif epoch - best_val_acc_epoch >= self.params['patience']:
-                    print("Stopping training after %i epochs without improvement on validation accuracy." % self.params['patience'])
+                    print("Stopping training after %i epochs without improvement on validation accuracy." % self.params[
+                        'patience'])
                     break
 
     # train-1
@@ -509,7 +498,8 @@ class DenseGGNNModel():
             num_graphs = batch_data[self.placeholders['num_graphs']]
             processed_graphs += num_graphs
             if is_training:
-                batch_data[self.placeholders['out_layer_dropout_keep_prob']] = self.params['out_layer_dropout_keep_prob']
+                batch_data[self.placeholders['out_layer_dropout_keep_prob']] = self.params[
+                    'out_layer_dropout_keep_prob']
                 fetch_list = [self.ops['loss'], accuracy_ops, self.ops['summary'], self.ops['train_step']]
             else:
                 batch_data[self.placeholders['out_layer_dropout_keep_prob']] = 1.0
@@ -657,6 +647,3 @@ class DenseGGNNModel():
         fetch_list = self.output
         result = self.sess.run(fetch_list, feed_dict=batch_feed_dict)
         return result
-
-
-

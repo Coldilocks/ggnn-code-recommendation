@@ -5,7 +5,6 @@ from model import CodeRecModel
 from dataset import JavaCodeDataset
 from dataloader import JavaCodeDataloader
 from train import train
-from test import test
 
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -56,7 +55,7 @@ opt.dataroot = 'data/small_input.json'
 
 def main(opt):
     train_dataset = JavaCodeDataset(opt.dataroot, opt.n_edges, True)
-    train_dataloader = JavaCodeDataloader(train_dataset, batch_size=opt.batch_size,
+    train_dataloader = JavaCodeDataloader(train_dataset, batch_size=opt.num_graphs,
                                           shuffle=True, num_workers=opt.workers)
 
     # test_dataset = JavaCodeDataset(opt.dataroot, opt.n_edges, False)
