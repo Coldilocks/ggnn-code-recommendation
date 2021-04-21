@@ -18,16 +18,16 @@ There are three packages inside the project:
   Currently there is no dataset loading method️ for this implementation, and all the input data is randomly generated.
 
 2. code_rec_api_level
-- torch_version_1
+- **torch_version_1**
   
   An unofficial implementation of Java API recommendation model for the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**[<sup>3</sup>](#refer-anchor3). This model is inspired by another two repository: **ggnn.pytorch**[<sup>4</sup>](#refer-anchor4) and **GGNN_Reasoning**[<sup>5</sup>](#refer-anchor5).
   
-- torch_version_2
+- **torch_version_2**
   
   This is also an unofficial implementation of the above paper. Please note that it is based on the model under the `basic_ggnn_model/torch_version` package.
 
 3. code_rec_token_level
-- tf_version: 
+- **tf_version**
 
   Token-level Code recommentation model inspired by the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**.
   
