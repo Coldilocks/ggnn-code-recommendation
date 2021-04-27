@@ -9,7 +9,7 @@ class JavaCodeDataset():
     def __init__(self, file_name, is_training, param, opt):
         self.max_num_vertices = 0
         self.num_edge_types = 8
-        self.unk_id = 7141
+        self.unk_id = param['var_vocab_size'] - 1
         self.sample_ratios = None
         self.is_training = is_training
 
@@ -22,7 +22,6 @@ class JavaCodeDataset():
         # node_num_2_graph_dict, node_sizes, node_num_at_batch
         # self.bucketed, self.bucket_sizes, self.bucket_at_step
         self.node_num_2_graph_dict, self.node_sizes, self.node_num_at_batch = self.load_graphs_from_file(file_name)
-
 
     # def __getitem__(self, index):
     #     return
@@ -58,25 +57,33 @@ class JavaCodeDataset():
             batch_data = self.make_batch(elements)
             num_graphs = len(batch_data['orders'])
 
-            # todo: unknown?
-            batch_data['orders'] = np.squeeze(batch_data['orders'], axis=1)
-            batch_data['labels'] = np.squeeze(batch_data['labels'], axis=1)
-            batch_data['task_masks'] = np.squeeze(batch_data['task_masks'], axis=1)
+            if len(batch_data['orders']) == 0 or len(batch_data['target_values']) == 0 or len(
+                    batch_data['target_masks']) == 0:
+                continue
+
+            try:
+                batch_data['orders'] = np.squeeze(batch_data['orders'], axis=1)
+                batch_data['target_values'] = np.squeeze(batch_data['target_values'], axis=1)
+                batch_data['target_masks'] = np.squeeze(batch_data['target_masks'], axis=1)
+            except:
+                print('error')
+                print(batch_data['orders'])
+                print(batch_data['target_values'])
+                print(batch_data['target_masks'])
+
             # if len(batch_data['orders'].shape) == 1:
             #     batch_data['orders'] = np.expand_dims(batch_data['orders'], axis=0)
             #
-            if len(batch_data['labels']) == 0:
-                continue
 
             bucket_counters[node_size_index] += 1
 
             final_batch_data = {
                 'adj_mat': torch.FloatTensor(batch_data['adj_mat']),
                 'input_orders': torch.LongTensor(batch_data['orders']),
-                'target_values': torch.LongTensor(batch_data['labels']),
+                'target_values': torch.LongTensor(batch_data['target_values']),
                 'node_mask': torch.FloatTensor(batch_data['node_mask']),
-                'target_mask': torch.FloatTensor(batch_data['task_masks']),
-                'variable_orders': torch.LongTensor(batch_data['variables']),
+                'target_mask': torch.FloatTensor(batch_data['target_masks']),
+                'variable_orders': torch.LongTensor(batch_data['variable_orders']),
                 'variable_masks': torch.FloatTensor(batch_data['variable_masks']),
                 'num_vertices': node_num,
                 'num_graphs': num_graphs
@@ -84,31 +91,33 @@ class JavaCodeDataset():
 
             yield final_batch_data
 
-
     def make_batch(self, elements):
         batch_data = {
             'adj_mat': [],
             'orders': [],
-            'labels': [],
+            'target_values': [],
             'node_mask': [],
-            'task_masks': [],
-            'variables': [],
+            'target_masks': [],
+            'variable_orders': [],
             'variable_masks': []
         }
 
         for d in elements:
             variable_length = len(d['variable'][0])
             batch_data['adj_mat'].append(d['adj_mat'])
+            # if len(np.array(d['orders']).shape) == 2:
+            #     d['orders'] = d['orders'][0]
             batch_data['orders'].append(d['orders'])
-            batch_data['node_mask'].append(d['mask'])
+            batch_data['node_mask'].append(d['node_mask'])
             variables = [idx for idx in d['variable'][0][:self.max_var_len]] + [self.unk_id for _ in
-                                                                  range(self.max_var_len - variable_length)]
-            batch_data['variables'].append(variables)
+                                                                                range(
+                                                                                    self.max_var_len - variable_length)]
+            batch_data['variable_orders'].append(variables)
 
             target_task_values = []
             target_task_mask = []
 
-            for target_val in d['labels']:
+            for target_val in d['target_values']:
                 if target_val is None:
                     target_task_values.append(0.)
                     target_task_mask.append(0.)
@@ -123,8 +132,8 @@ class JavaCodeDataset():
                 else:
                     variable_mask.append([0 for _ in range(self.embedding_size)])
 
-            batch_data['labels'].append(target_task_values)
-            batch_data['task_masks'].append(target_task_mask)
+            batch_data['target_values'].append(target_task_values)
+            batch_data['target_masks'].append(target_task_mask)
             batch_data['variable_masks'].append(variable_mask)
 
         return batch_data
@@ -149,7 +158,7 @@ class JavaCodeDataset():
         node_num_2_graph_dict = defaultdict(list)
         for d in raw_data:
             chosen_node_idx = np.argmax(node_sizes > max([v for e in d['graph']
-                                                            for v in [e[0], e[2]]]))
+                                                          for v in [e[0], e[2]]]))
             chosen_node_num = node_sizes[chosen_node_idx]
             n_actual_nodes = len(d['orders'][0])
 
@@ -171,14 +180,14 @@ class JavaCodeDataset():
                 'adj_mat': self.graph_to_adj_mat(d['graph'], chosen_node_num, self.num_edge_types,
                                                  self.tie_fwd_bkwd),
                 'orders': [d["orders"][0] + [0 for _ in range(chosen_node_num - n_actual_nodes)]],
-                'labels': [d["targets"][0][0]],
-                'mask': [[1.0 for _ in range(self.hidden_size)] for _ in range(n_actual_nodes)] +
-                        [[0. for _ in range(self.hidden_size)] for _ in
-                         range(chosen_node_num - n_actual_nodes)],
+                'target_values': [d["targets"][0][0]],
+                'node_mask': [[1.0 for _ in range(self.hidden_size)] for _ in range(n_actual_nodes)] +
+                             [[0. for _ in range(self.hidden_size)] for _ in
+                              range(chosen_node_num - n_actual_nodes)],
                 'variable': [cur_variable_indexes]
             })
 
-        # 抽样（将一部分数据的labels变成None）
+        # 抽样（将一部分数据的target_values变成None）
         # if self.is_training:
         #     for (node_num_id, bucket) in node_num_2_graph_dict.items():
         #         # 打乱每个bucket（包含了相同节点）的数据
@@ -186,11 +195,11 @@ class JavaCodeDataset():
         #         if self.sample_ratios is not None:
         #             ex_to_sample = int(len(bucket) * self.sample_ratios)
         #             for ex_id in range(ex_to_sample, len(bucket)):
-        #                 bucket[ex_id]['labels'][0] = None
+        #                 bucket[ex_id]['target_values'][0] = None
 
         # [[1,1,1,1],[3,3,3],[5,5,5,5,5]]
         node_num_at_batch = [[node_num_id for _ in range(len(graph_data_of_node_num) // self.batch_size + 1)]
-                          for node_num_id, graph_data_of_node_num in node_num_2_graph_dict.items()]
+                             for node_num_id, graph_data_of_node_num in node_num_2_graph_dict.items()]
 
         # [1,1,1,1,3,3,3,5,5,5,5,5], 每个数字代表每个batch中每个图的结点数
         node_num_at_batch = [x for y in node_num_at_batch for x in y]
