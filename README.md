@@ -1,38 +1,86 @@
-## GGNN Code Recommendation 
+## GGNN Code Recommendation
 
-### 1. Brief Introduction
-This repository contains GGNN(Gated Graph Neural Network[<sup>1</sup>](#refer-anchor1)) based code recommendation models implemented in PyTorch and Tensorflow 1.0, which can generate API or token predictions for incomplete code snippets.
+### 1. 简单介绍
+这个项目包含了GGNN(Gated Graph Neural Network[<sup>1</sup>](#refer-anchor1)，门控图神经网络)的代码，以及基于GGNN的API代码推荐和token推荐模型的源代码。
 
-### 2. Project Structure
-There are three packages inside the project:
+### 2. 项目结构
+本项目有三个模块:
 
-1. basic_ggnn_model 
-- **tf_version**
-      
-  The model under this package is a duplicate implementation of GGNN model in Tensorflow in another repository: **gated-graph-neural-network-samples**[<sup>2</sup>](#refer-anchor2).
-  A small modification is to merge the DenseGGNNChemModel and ChemModel in the original version into DenseGGNNModel for easy reading.
- 
-- **torch_version**
+####2.1 basic_ggnn_model
+   
+> GGNN模型的代码，tf版本和pytorch版本
 
-  A re-implemented PyTorch GGNN model based on the Tensorflow version(**gated-graph-neural-network-samples**[<sup>2</sup>](#refer-anchor2)).
-  Currently there is no dataset loading method️ for this implementation, and all the input data is randomly generated.
-
-2. code_rec_api_level
-- **torch_version_1**
-  
-  An unofficial implementation of Java API recommendation model for the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**[<sup>3</sup>](#refer-anchor3). This model is inspired by another two repository: **ggnn.pytorch**[<sup>4</sup>](#refer-anchor4) and **GGNN_Reasoning**[<sup>5</sup>](#refer-anchor5).
-  
-- **torch_version_2**
-  
-  This is also an unofficial implementation of the above paper. Please note that it is based on the model under the `basic_ggnn_model/torch_version` package.
-
-3. code_rec_token_level
-- **tf_version**
-
-  Token-level Code recommentation model inspired by the paper **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**.
+(1) **tf_version**
   
 
+- 代码来源：微软开源的 tensorflow1.0+ 版本的GGNN源代码，项目路径：**microsoft/gated-graph-neural-network-samples**[<sup>2</sup>](#refer-anchor2)。
 
+  
+- 注意：为了方便阅读和调试，我们对`microsoft/gated-graph-neural-network-samples`的代码进行了简单的修改，将原来的DenseGGNNChemModel类和ChemModel类合并为DenseGGNNModel类。
+
+(2) **torch_version**
+
+  
+- 说明：参考Tensorflow版本复现的PyTorch版本 GGNN 模型。
+
+
+- 注意：只包含了模型的代码，不包含数据集加载部分。目前 main.py 中所有的数据都是随机生成的。
+
+####2.2 code_rec_api_level
+
+>基于GGNN模型的API推荐，包含一个tf版本和两个pytorch版本。
+> 
+>Step1. 将代码的 API上下文图 输入到 GGNN 中得到此图的向量表示 
+> 
+>Step2. 将代码的 token序列 输入到 LSTM 中的到隐藏状态
+> 
+>Step3. 将两个网络输出的向量拼接，在输入到Softmax得到输出
+
+
+(1) **tf_version_1**
+
+- 说明：tensorflow 1.0+ 版本的 API推荐模型
+
+
+- 代码来源：论文 **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**[<sup>3</sup>](#refer-anchor3) 的源代码。
+
+
+- 注意：此API推荐模型中的GGNN模型的代码是在`microsoft/gated-graph-neural-network-samples`的基础上改的。
+  
+
+(2) **tf_version_2**
+
+- 说明：依然是tensorflow 1.0+ 版本的 API推荐模型。这里的代码和 `code_rec_api_level/tf_version_1` 几乎是一样，只是将 tf_version_1/model_train.py 中的类拆分到了不同文件。
+
+
+- 代码来源：依然是论文 **Holistic Combination of Structural and Textual Code Information for Context based API Recommendation**[<sup>3</sup>](#refer-anchor3) 的源代码。
+
+
+
+(3) **torch_version_1**
+
+- 说明：Pytorch版本的 API推荐。
+  
+
+- 代码来源：GGNN模型的代码参考了另外两个项目来实现：**ggnn.pytorch**[<sup>4</sup>](#refer-anchor4) 和 **GGNN_Reasoning**[<sup>5</sup>](#refer-anchor5)。
+
+
+
+(4) **torch_version_2**
+
+- 说明：Pytorch版本的 API推荐，和（3）的区别是GGNN模型的代码不同。
+
+- 代码来源：GGNN模型的代码使用的是`basic_ggnn_model/torch_version`中的。
+
+
+
+####2.3 code_rec_token_level
+
+>基于GGNN模型的代码token推荐，目前只包含一个tf版本。
+
+(1) **tf_version**
+
+- 说明：tensorflow版本的 token推荐，参考`code_rec_api_level/tf_version_1`来实现。
 
 
 ### 3. Reference
