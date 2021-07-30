@@ -74,7 +74,7 @@
 
 
 
-####2.3 code_rec_token_level
+#### 2.3 code_rec_token_level
 
 >基于GGNN模型的代码token推荐，目前只包含一个tf版本。
 
