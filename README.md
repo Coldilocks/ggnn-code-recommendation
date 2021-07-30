@@ -6,7 +6,7 @@
 ### 2. 项目结构
 本项目有三个模块:
 
-####2.1 basic_ggnn_model
+#### 2.1 basic_ggnn_model
    
 > GGNN模型的代码，tf版本和pytorch版本
 
@@ -26,7 +26,7 @@
 
 - 注意：只包含了模型的代码，不包含数据集加载部分。目前 main.py 中所有的数据都是随机生成的。
 
-####2.2 code_rec_api_level
+#### 2.2 code_rec_api_level
 
 >基于GGNN模型的API推荐，包含一个tf版本和两个pytorch版本。
 > 
